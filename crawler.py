@@ -1,23 +1,31 @@
-import yfinance as yf
+import requests
+from bs4 import BeautifulSoup
 
-def get_top_volume_stocks(limit=10):
-    # 사용자가 설정한 Fixed Stock List
-    tickers = [
-        "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
-        "NVDA", "META", "NFLX", "AMD", "INTC",
-        "CSCO", "ORCL", "QCOM"
-    ]
+URL = "https://finance.yahoo.com/markets/stocks/most-active/"
+HEADERS = {"User-Agent": "Mozilla/5.0"}
+
+def request_html(url=URL):
+    response = requests.get(url, headers=HEADERS)
+    response.raise_for_status()
+    return response.text
+
+def parse_top_10(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    rows = soup.select("table tbody tr")[:10]
 
     results = []
-
-    for t in tickers:
-        stock = yf.Ticker(t)
-        info = stock.info
+    for r in rows:
+        cols = r.find_all("td")
 
         results.append({
-            "ticker": t,
-            "price": info.get("regularMarketPrice", 0),
-            "volume": info.get("volume", 0)
+            "company_name": cols[1].get_text(strip=True),
+            "ticker": cols[0].get_text(strip=True),
+            "price": r.find("fin-streamer", {"data-field": "regularMarketPrice"}).get_text(strip=True),
+            "volume": cols[6].get_text(strip=True)
         })
 
-    return sorted(results, key=lambda x: x["volume"], reverse=True)[:limit]
+    return results
+
+def get_stocks():
+    html=request_html()
+    return parse_top_10(html)
