@@ -13,13 +13,13 @@ def print_top_volume_stocks(data):
     print("\n==============================")
     print("거래량 상위 10 종목")
     print("==============================")
-    print(f"{'Ticker':<10} {'Company:<20'} {'Price':<15} {'Volume:<15'}")
+    print(f"{'Ticker':<10} {'Company':<30} {'Price($)':<15} {'Volume':<15}")
     print("------------------------------")
 
 
 
     for s in data:
-        print(f"{s['ticker']:<10} {s['company_name']:<20} {s['price']:<15} {s['volume']:<15}")
+        print(f"{s['ticker']:<10} {s['company_name']:<30} {s['price']:<15} {s['volume']:<15}")
 
     print("==============================\n")
 
