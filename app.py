@@ -17,14 +17,11 @@ def print_top_volume_stocks(data):
     print(f"{'Ticker':<10} {'Company':<30} {'Price($)':<15} {'Volume':<15}")
     print("-" * 75)
 
-
-
     for s in data:
         print(f"{s['ticker']:<10} {s['company_name']:<30} {s['price']:<15} {s['volume']:<15}")
 
     print("=" * 75)
     print("\n")
-
 
 if __name__ == "__main__":
     user_interval = choose_interval()
