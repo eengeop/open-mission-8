@@ -13,6 +13,10 @@ def parse_top_10(html):
     soup = BeautifulSoup(html, 'html.parser')
     rows = soup.select("table tbody tr")[:10]
 
+    if not rows:
+        print("[ERROR] Yahoo Finance에서 값을 찾을 수 없습니다.")
+        return []
+
     results = []
     for r in rows:
         cols = r.find_all("td")
