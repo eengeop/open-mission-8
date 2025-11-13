@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 default_refresh_interval = 5
 
-@app.route("/", method = "POST")
+@app.route("/", methods = ["GET", "POST"])
 def index():
     global default_refresh_interval
 
