@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from crawler import get_stocks
 
 app = Flask(__name__)
@@ -12,9 +12,11 @@ def index():
     if request.method == "POST":
         default_refresh_interval = int(request.form["interval"])
 
-    stocks = get_stocks()
-
     return render_template("index.html", stocks=stocks, interval = default_refresh_interval)
+
+def api_stocks():
+    stocks = get_stocks()
+    return jsonify(stocks)
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
