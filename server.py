@@ -44,5 +44,16 @@ def add_favorite():
     db.close()
     return jsonify({"status":"added"})
 
+@app.route("/favorite/remove", method=["POST"])
+def remove_favorite():
+    data = request.json
+    ticker = data["ticker"]
+
+    db = SessionLocal()
+    db.query(Favorite).filter_by(ticker=ticker).delete()
+    db.commit()
+    db.close()
+    return jsonify({"status": "removed"})
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
