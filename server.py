@@ -27,5 +27,22 @@ def api_stocks():
     stocks = get_stocks()
     return jsonify(stocks)
 
+@app.route("/favorite/add", method=["POST"])
+def add_favorite():
+    data = request.json
+    ticker = data["ticker"]
+    company = data["company_name"]
+
+    db = SessionLocal()
+    exists = db.query(Favorite).filter_by(ticker=ticker).first()
+
+    if not exists:
+        fav = Favorite(ticker=ticker, company_name = company)
+        db.add(fav)
+        db.commit()
+
+    db.close()
+    return jsonify({"status":"added"})
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
