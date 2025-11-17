@@ -2,46 +2,138 @@
 <html lang="ko">
 
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>거래량 상위 10 종목</title>
-
-    <meta http-equiv="refresh" content="{{ interval }}">
+    <style>
+        .fav-btn {
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .star-on { color: gold; }
+        .star-off { color: #bbb; }
+    </style>
 </head>
 
 <body>
-    <h1>📊 거래량 상위 10 종목</h1>
 
-    <form action="/" method="POST">
-        <label>새로고침 간격 (초):</label>
-        <input type="number" name="interval" min="1" value="{{ interval }}">
-        <button type="submit">변경</button>
-    </form>
+<h1>📊 거래량 상위 10 종목 (AJAX 자동 업데이트)</h1>
 
-    <p>현재 새로고침 간격: <strong>{{ interval }}초</strong></p>
+<form method="POST" action="/">
+    <label>새로고침 간격 (초):</label>
+    <input type="number" name="interval" min="1" value="{{ interval }}">
+    <button type="submit">변경</button>
+</form>
 
-    <hr>
+<p>현재 간격: <strong id="cur-interval">{{ interval }}</strong>초</p>
 
-    <table border="1" cellpadding="8">
-        <thead>
-            <tr>
-                <th>Ticker</th>
-                <th>Company</th>
-                <th>Price($)</th>
-                <th>Volume</th>
-            </tr>
-        </thead>
+<hr>
 
-        <tbody>
-            {% for s in stocks %}
-            <tr>
-                <td>{{ s.ticker }}</td>
-                <td>{{ s.company_name }}</td>
-                <td>{{ s.price }}</td>
-                <td>{{ s.volume }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<h2>📈 실시간 주가</h2>
+
+<table border="1" cellpadding="8">
+    <thead>
+        <tr>
+            <th>Fav</th>
+            <th>Ticker</th>
+            <th>Company</th>
+            <th>Price</th>
+            <th>Volume</th>
+        </tr>
+    </thead>
+
+    <tbody id="stocks-table"></tbody>
+</table>
+
+
+<hr>
+
+<h2>⭐ 내 즐겨찾기 목록</h2>
+
+<table border="1" cellpadding="8">
+    <thead>
+        <tr>
+            <th>Ticker</th>
+            <th>Company</th>
+        </tr>
+    </thead>
+    <tbody id="favorites-table"></tbody>
+</table>
+
+
+<script>
+    let refreshInterval = {{ interval }} * 1000;
+    let favoriteTickers = new Set({{ favorite_tickers|tojson }});
+
+    function renderFavorites() {
+        fetch("/api/favorites")
+            .then(res => res.json())
+            .then(list => {
+                let html = "";
+                list.forEach(f => {
+                    html += `
+                        <tr>
+                            <td>${f.ticker}</td>
+                            <td>${f.company_name}</td>
+                        </tr>
+                    `;
+                });
+                document.getElementById("favorites-table").innerHTML = html;
+            });
+    }
+
+    function toggleFavorite(ticker, company) {
+        const isFav = favoriteTickers.has(ticker);
+
+        fetch(isFav ? "/favorite/remove" : "/favorite/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ticker, company_name: company })
+        }).then(() => {
+            if (isFav) favoriteTickers.delete(ticker);
+            else favoriteTickers.add(ticker);
+            fetchStocks();
+            renderFavorites();
+        });
+    }
+
+    function fetchStocks() {
+        fetch("/api/stocks")
+            .then(res => res.json())
+            .then(data => {
+                let html = "";
+
+                data.forEach(s => {
+                    const isFav = favoriteTickers.has(s.ticker);
+                    const starClass = isFav ? "star-on" : "star-off";
+
+                    html += `
+                        <tr>
+                            <td>
+                                <span class="fav-btn ${starClass}"
+                                      onclick="toggleFavorite('${s.ticker}', '${s.company_name}')">★</span>
+                            </td>
+                            <td>${s.ticker}</td>
+                            <td>${s.company_name}</td>
+                            <td>${s.price}</td>
+                            <td>${s.volume}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById("stocks-table").innerHTML = html;
+            });
+    }
+
+    // 초기 로딩
+    fetchStocks();
+    renderFavorites();
+
+    // 자동 갱신
+    setInterval(() => {
+        fetchStocks();
+        renderFavorites();
+    }, refreshInterval);
+
+</script>
 </body>
-
 </html>
