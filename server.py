@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from crawler import get_stocks
-from database import SessionLocal
+from database import SessionLocal, engine, Base
 from models import Favorite
 
 app = Flask(__name__)
@@ -27,7 +27,16 @@ def api_stocks():
     stocks = get_stocks()
     return jsonify(stocks)
 
-@app.route("/favorite/add", method=["POST"])
+@app.route("/api/favorites")
+def api_favorites():
+    db = SessionLocal()
+    favorites = db.query(Favorite).all()
+    db.close()
+
+    return jsonify([{"ticker":f.ticker, "company_name":f.company_name}
+                   for f in favorites])
+
+@app.route("/favorite/add", methods=["POST"])
 def add_favorite():
     data = request.json
     ticker = data["ticker"]
@@ -44,7 +53,7 @@ def add_favorite():
     db.close()
     return jsonify({"status":"added"})
 
-@app.route("/favorite/remove", method=["POST"])
+@app.route("/favorite/remove", methods=["POST"])
 def remove_favorite():
     data = request.json
     ticker = data["ticker"]
@@ -56,4 +65,5 @@ def remove_favorite():
     return jsonify({"status": "removed"})
 
 if __name__ == "__main__":
+    Base.metadata.create_all(engine)
     app.run(debug=True, port=5000)
