@@ -1,7 +1,7 @@
 from sqlalchemy import Integer, Column, String
 from database import Base
 
-class Favorit(Base):
+class Favorite(Base):
     __tablename__ = "favorite_stocks"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
